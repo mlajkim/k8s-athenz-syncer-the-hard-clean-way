@@ -1,135 +1,66 @@
 # k8s-athenz-syncer-the-hard-clean-way
-// TODO(user): Add simple overview of use/purpose
 
-## Description
-// TODO(user): An in-depth paragraph about your project and overview of use
+`k8s-athenz-syncer-the-hard-clean-way` [^1] is a Kubernetes controller that syncs Athenz roles and policies with Kubernetes RBAC, just like [Athenz/k8s-athenz-syncer](https://github.com/AthenZ/k8s-athenz-syncer), but in a more manual and educational way.
 
-## Getting Started
+## Philosophy
 
-### Prerequisites
-- go version v1.24.6+
-- docker version 17.03+.
-- kubectl version v1.11.3+.
-- Access to a Kubernetes v1.11.3+ cluster.
+This project tries to demonstrate the sync between Athenz Role and Kubernetes RBAC only using `ZMS API calls`. This project is also designed not to care about the performance or scalability. The main goal is to help users understand how the sync works under the hood.
 
-### To Deploy on the cluster
-**Build and push your image to the location specified by `IMG`:**
+
+## Build Locally
+
+To build the manager binary locally you can run:
 
 ```sh
-make docker-build docker-push IMG=<some-registry>/k8s-athenz-syncer-the-hard-clean-way:tag
+make build
 ```
 
-**NOTE:** This image ought to be published in the personal registry you specified.
-And it is required to have access to pull the image from the working environment.
-Make sure you have the proper permission to the registry if the above commands don’t work.
+## Code Structure
 
-**Install the CRDs into the cluster:**
+### main.go
 
-```sh
-make install
-```
+The entry point for the controller manager. It sets up the manager, registers the controllers, and starts the manager.
 
-**Deploy the Manager to the cluster with the image specified by `IMG`:**
+### internal/config
 
-```sh
-make deploy IMG=<some-registry>/k8s-athenz-syncer-the-hard-clean-way:tag
-```
+Handles required configurations for the controller manager.
 
-> **NOTE**: If you encounter RBAC errors, you may need to grant yourself cluster-admin
-privileges or be logged in as admin.
 
-**Create instances of your solution**
-You can apply the samples (examples) from the config/sample:
+### internal/controller
 
-```sh
-kubectl apply -k config/samples/
-```
+List of controllers that this operator `k8s-athenz-syncer-the-hard-clean-way` can do.
 
->**NOTE**: Ensure that the samples has default values to test it out.
+Controllers's code should be neat so that it is easier to grab the flow of reconciliation logic.
 
-### To Uninstall
-**Delete the instances (CRs) from the cluster:**
+Core jobs:
 
-```sh
-kubectl delete -k config/samples/
-```
+- `NamespaceController`: Use namespaces as SSOT, and syncs:
+  - Athenz Sub Domains, if not exist
+  - Athenz Default Roles, if not exist
+  - Kubernetes necessary RBAC Roles, if not exist
+- `AthenzRoleController`: Every minute, check all athenz roles under certain Parent domain, and syncs:
+  - Kubernetes RBAC Roles, if not synced
 
-**Delete the APIs(CRDs) from the cluster:**
 
-```sh
-make uninstall
-```
+### internal/syncer
 
-**UnDeploy the controller from the cluster:**
+List of core syncer logics that controllers use to perform the sync between Athenz and Kubernetes.
 
-```sh
-make undeploy
-```
 
-## Project Distribution
+### pkg/athenz
 
-Following the options to release and provide this solution to the users.
+> [!TIP]
+>`pkg` does not include any business logics.
 
-### By providing a bundle with all YAML files
+Self-created athenz library to interact with Athenz ZMS server using ZMS APIs. I could have used the official Athenz Go client library, but I wanted to keep this project simple and focused on demonstrating the sync logic.
 
-1. Build the installer for the image built and published in the registry:
+### pkg/athenzutil
 
-```sh
-make build-installer IMG=<some-registry>/k8s-athenz-syncer-the-hard-clean-way:tag
-```
+Even lower level utility functions to support `pkg/athenz`.
 
-**NOTE:** The makefile target mentioned above generates an 'install.yaml'
-file in the dist directory. This file contains all the resources built
-with Kustomize, which are necessary to install this project without its
-dependencies.
 
-2. Using the installer
+<!-- Footnote -->
 
-Users can just run 'kubectl apply -f <URL for YAML BUNDLE>' to install
-the project, i.e.:
+[^1]: This project's name is inspired by [Kelsey Hightower's Kubernetes The Hard Way](https://github.com/kelseyhightower/kubernetes-the-hard-way)
 
-```sh
-kubectl apply -f https://raw.githubusercontent.com/<org>/k8s-athenz-syncer-the-hard-clean-way/<tag or branch>/dist/install.yaml
-```
-
-### By providing a Helm Chart
-
-1. Build the chart using the optional helm plugin
-
-```sh
-kubebuilder edit --plugins=helm/v2-alpha
-```
-
-2. See that a chart was generated under 'dist/chart', and users
-can obtain this solution from there.
-
-**NOTE:** If you change the project, you need to update the Helm Chart
-using the same command above to sync the latest changes. Furthermore,
-if you create webhooks, you need to use the above command with
-the '--force' flag and manually ensure that any custom configuration
-previously added to 'dist/chart/values.yaml' or 'dist/chart/manager/manager.yaml'
-is manually re-applied afterwards.
-
-## Contributing
-// TODO(user): Add detailed information on how you would like others to contribute to this project
-
-**NOTE:** Run `make help` for more information on all potential `make` targets
-
-More information can be found via the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html)
-
-## License
-
-Copyright 2025.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
+<!-- Footnote -->
