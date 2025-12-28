@@ -17,7 +17,7 @@ type PostSubDomainResponse struct {
 
 // PostSubDomain creates a new subdomain under the specified top-level domain (tld).
 // Of course, this is not meant for TLD, where creating TLD is only for Athenz administrators.
-func (c *Client) PostSubDomain(domain string) (*PostSubDomainResponse, error) {
+func (c *AthenzClient) PostSubDomain(domain string) (*PostSubDomainResponse, error) {
 	// before anything happens, lets first check if the domain exists:
 	if res, err := c.GetDomain(domain); err == nil {
 		return &PostSubDomainResponse{

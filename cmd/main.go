@@ -26,6 +26,7 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"github.com/mlajkim/k8s-athenz-syncer-the-hard-clean-way/internal/config"
+	"github.com/mlajkim/k8s-athenz-syncer-the-hard-clean-way/pkg/athenz"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -55,9 +56,19 @@ func init() {
 
 // nolint:gocyclo
 func main() {
-	c, err := config.Load(configPath)
+	cfg, err := config.Load(configPath)
 	if err != nil {
 		setupLog.Error(err, "failed to load config")
+		os.Exit(1)
+	}
+
+	athenzClient, err := athenz.New(athenz.Args{
+		ZmsURL:   cfg.Athenz.ZmsURL,
+		CertPath: cfg.Athenz.CertPath,
+		KeyPath:  cfg.Athenz.KeyPath,
+	})
+	if err != nil {
+		setupLog.Error(err, "failed to create athenz client")
 		os.Exit(1)
 	}
 
@@ -186,9 +197,10 @@ func main() {
 	}
 
 	if err := (&controller.NamespaceReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-		Config: c,
+		Client:       mgr.GetClient(),
+		Scheme:       mgr.GetScheme(),
+		Cfg:          cfg,
+		AthenzClient: athenzClient,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Namespace")
 		os.Exit(1)

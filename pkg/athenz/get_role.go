@@ -30,7 +30,7 @@ type GetRoleResponse struct {
 // https://github.com/AthenZ/athenz/blob/master/core/zms/src/main/rdl/Role.rdli#L38-L53
 
 // GetRole returns role information in a given domain and role (modified date)
-func (c *Client) GetRole(domainName, roleName string) (GetRoleResponse, error) {
+func (c *AthenzClient) GetRole(domainName, roleName string) (GetRoleResponse, error) {
 	endpoint := fmt.Sprintf("domain/%s/role/%s", domainName, roleName)
 
 	resp, err := c.Get(endpoint, nil)

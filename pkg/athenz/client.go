@@ -15,19 +15,19 @@ type Args struct {
 	KeyPath  string // Path to client private key file i.e) /var/run/athenz/service.key
 }
 
-type Client struct {
+type AthenzClient struct {
 	httpClient *http.Client
 	*Args
 }
 
 // Initialize a new Athenz Client with mTLS configuration
-func NewClient(c Args) (*Client, error) {
+func New(c Args) (*AthenzClient, error) {
 	cert, err := tls.LoadX509KeyPair(c.CertPath, c.KeyPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load client certs: %w", err)
 	}
 
-	return &Client{
+	return &AthenzClient{
 		httpClient: &http.Client{Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
 				InsecureSkipVerify: true, // Disabled as we are using self-signed Athenz root CA certs
@@ -38,7 +38,7 @@ func NewClient(c Args) (*Client, error) {
 	}, nil
 }
 
-func (c *Client) Get(endpoint string, params url.Values) (*http.Response, error) {
+func (c *AthenzClient) Get(endpoint string, params url.Values) (*http.Response, error) {
 	u, err := url.Parse(c.ZmsURL)
 	if err != nil {
 		return nil, fmt.Errorf("invalid base url: %w", err)
@@ -54,7 +54,7 @@ func (c *Client) Get(endpoint string, params url.Values) (*http.Response, error)
 	return c.httpClient.Get(u.String())
 }
 
-func (c *Client) Post(endpoint string, body interface{}) (*http.Response, error) {
+func (c *AthenzClient) Post(endpoint string, body interface{}) (*http.Response, error) {
 	u, err := url.Parse(c.ZmsURL)
 	if err != nil {
 		return nil, fmt.Errorf("invalid base url: %w", err)
@@ -73,7 +73,7 @@ func (c *Client) Post(endpoint string, body interface{}) (*http.Response, error)
 	return c.httpClient.Post(u.String(), "application/json", bytes.NewBuffer(jsonBytes))
 }
 
-func (c *Client) Delete(endpoint string) (*http.Response, error) {
+func (c *AthenzClient) Delete(endpoint string) (*http.Response, error) {
 	u, err := url.Parse(c.ZmsURL)
 	if err != nil {
 		return nil, fmt.Errorf("invalid base url: %w", err)
@@ -89,7 +89,7 @@ func (c *Client) Delete(endpoint string) (*http.Response, error) {
 	return c.httpClient.Do(req)
 }
 
-func (c *Client) Put(endpoint string, body interface{}) (*http.Response, error) {
+func (c *AthenzClient) Put(endpoint string, body interface{}) (*http.Response, error) {
 	u, err := url.Parse(c.ZmsURL)
 	if err != nil {
 		return nil, fmt.Errorf("invalid base url: %w", err)

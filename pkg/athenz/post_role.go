@@ -17,7 +17,7 @@ import (
 // TODO: that case I should modify the function name to PutRole, to emphasize it will work EVEN when role exists
 // PostRole creates a new role under the specified parent domain.
 // Of course, this is not meant for TLD, where creating TLD is only for Athenz administrators.
-func (c *Client) PostRole(domain, newRole string) error {
+func (c *AthenzClient) PostRole(domain, newRole string) error {
 	// if role exists, we should not do something here, because the creation sets members to empty:
 	if _, err := c.GetRole(domain, newRole); err == nil {
 		return nil

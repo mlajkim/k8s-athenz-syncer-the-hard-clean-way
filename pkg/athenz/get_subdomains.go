@@ -11,7 +11,7 @@ type DomainResponse struct {
 	Domains []string `json:"names"`
 }
 
-func (c *Client) GetSubDomains(parentDomain string) ([]string, error) {
+func (c *AthenzClient) GetSubDomains(parentDomain string) ([]string, error) {
 	resp, err := c.Get("/domain", url.Values{
 		"prefix": []string{parentDomain},
 	})

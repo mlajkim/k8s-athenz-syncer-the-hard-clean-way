@@ -20,6 +20,7 @@ import (
 	"context"
 
 	"github.com/mlajkim/k8s-athenz-syncer-the-hard-clean-way/internal/config"
+	"github.com/mlajkim/k8s-athenz-syncer-the-hard-clean-way/pkg/athenz"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -30,8 +31,9 @@ import (
 // NamespaceReconciler reconciles a Namespace object
 type NamespaceReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
-	Config *config.Config
+	Scheme       *runtime.Scheme
+	Cfg          *config.Config
+	AthenzClient *athenz.AthenzClient
 }
 
 // +kubebuilder:rbac:groups=core,resources=namespaces,verbs=get;list;watch;create;update;patch;delete
