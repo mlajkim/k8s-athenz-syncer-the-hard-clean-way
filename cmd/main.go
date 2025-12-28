@@ -26,6 +26,7 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"github.com/mlajkim/k8s-athenz-syncer-the-hard-clean-way/internal/config"
+	"github.com/mlajkim/k8s-athenz-syncer-the-hard-clean-way/internal/syncer"
 	"github.com/mlajkim/k8s-athenz-syncer-the-hard-clean-way/pkg/athenz"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -67,6 +68,12 @@ func main() {
 		CertPath: cfg.Athenz.CertPath,
 		KeyPath:  cfg.Athenz.KeyPath,
 	})
+	if err != nil {
+		setupLog.Error(err, "failed to create athenz client")
+		os.Exit(1)
+	}
+
+	syncerClient := syncer.New(athenzClient, cfg)
 	if err != nil {
 		setupLog.Error(err, "failed to create athenz client")
 		os.Exit(1)
@@ -200,7 +207,7 @@ func main() {
 		Client:       mgr.GetClient(),
 		Scheme:       mgr.GetScheme(),
 		Cfg:          cfg,
-		AthenzClient: athenzClient,
+		SyncerClient: syncerClient,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Namespace")
 		os.Exit(1)

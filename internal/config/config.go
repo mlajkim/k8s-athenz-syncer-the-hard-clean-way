@@ -8,24 +8,30 @@ import (
 )
 
 type Config struct {
-	Athenz AthenzConfig `yaml:"athenz"`
-	Syncer SyncerConfig `yaml:"syncer"`
+	Athenz Athenz `yaml:"athenz"`
+	Syncer Syncer `yaml:"syncer"`
 }
 
-type AthenzConfig struct {
+type Athenz struct {
 	ZmsURL   string `yaml:"zmsUrl"`
 	CertPath string `yaml:"certPath"`
 	KeyPath  string `yaml:"keyPath"`
 }
 
-type SyncerConfig struct {
-	SyncParentDomain string           `yaml:"syncParentDomain"`
-	AthenzRoleSyncer AthenzRoleSyncer `yaml:"athenzRoleSyncer"`
-	// NamespaceSyncer is not yet required
+type Syncer struct {
+	// Shared:
+	ParentDomain string `yaml:"parentDomain"`
+
+	// Specific:
+	ARoleMembers ARoleMembers `yaml:"athenzRoleMembers"`
+	Namespaces   Namespaces   `yaml:"namespaces"`
 }
 
-type AthenzRoleSyncer struct {
+type ARoleMembers struct {
 	Interval string `yaml:"interval"`
+}
+
+type Namespaces struct {
 }
 
 func Load(path string) (*Config, error) {
@@ -57,11 +63,11 @@ func (c *Config) validate() error {
 		return fmt.Errorf("athenz.keyPath is missing")
 	}
 
-	if c.Syncer.SyncParentDomain == "" {
+	if c.Syncer.ParentDomain == "" {
 		return fmt.Errorf("syncer.syncParentDomain is missing")
 	}
-	if c.Syncer.AthenzRoleSyncer.Interval == "" {
-		return fmt.Errorf("syncer.athenzRoleSyncer.interval is missing")
+	if c.Syncer.ARoleMembers.Interval == "" {
+		return fmt.Errorf("syncer.athenzRoleMembers.interval is missing")
 	}
 
 	return nil

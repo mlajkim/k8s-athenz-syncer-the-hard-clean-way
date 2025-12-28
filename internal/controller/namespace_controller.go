@@ -20,7 +20,7 @@ import (
 	"context"
 
 	"github.com/mlajkim/k8s-athenz-syncer-the-hard-clean-way/internal/config"
-	"github.com/mlajkim/k8s-athenz-syncer-the-hard-clean-way/pkg/athenz"
+	"github.com/mlajkim/k8s-athenz-syncer-the-hard-clean-way/internal/syncer"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -33,7 +33,7 @@ type NamespaceReconciler struct {
 	client.Client
 	Scheme       *runtime.Scheme
 	Cfg          *config.Config
-	AthenzClient *athenz.AthenzClient
+	SyncerClient *syncer.Syncer
 }
 
 // +kubebuilder:rbac:groups=core,resources=namespaces,verbs=get;list;watch;create;update;patch;delete
@@ -52,7 +52,10 @@ type NamespaceReconciler struct {
 func (r *NamespaceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = logf.FromContext(ctx)
 
-	// TODO(user): your logic here
+	err := r.SyncerClient.NsIntoAthenzDomain(ctx, req.Name)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
 
 	return ctrl.Result{}, nil
 }
