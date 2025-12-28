@@ -7,3 +7,17 @@ syncer:
   parentDomain: "eks.users"
   athenzRoleMembers:
     interval: "1m"
+  roles:
+  - name: "k8s_ns_admins"
+    rules:
+    - apiGroups: [ "*" ]
+      resources: [ "*" ]
+      verbs: [ "*" ]
+  - name: "k8s_ns_viewers"
+    rules:
+    - apiGroups: [ "" ]
+      resources: [ "pods", "services", "configmaps" ]
+      verbs: [ "get", "list", "watch" ]
+    - apiGroups: [ "apps" ]
+      resources: [ "deployments", "statefulsets" ]
+      verbs: [ "get", "list", "watch" ]
