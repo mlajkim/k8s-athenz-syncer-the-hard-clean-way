@@ -49,6 +49,9 @@ Core jobs:
 
 ### internal/syncer
 
+> [!NOTE]
+> Please name your code with the SSOT file data type, so if operator syncs with Namespace, name it `namespace.go`, if it syncs with Athenz Role, name it `athenzrole.go`, etc.
+
 List of core syncer logics that controllers use to perform the sync between Athenz and Kubernetes.
 
 
