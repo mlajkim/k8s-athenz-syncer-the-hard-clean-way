@@ -23,8 +23,9 @@ import (
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
-	"github.com/mlajkim/k8s-athenz-syncer-the-hard-clean-way/internal/config"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
+
+	"github.com/mlajkim/k8s-athenz-syncer-the-hard-clean-way/internal/config"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -35,6 +36,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/metrics/filters"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+
+	"github.com/mlajkim/k8s-athenz-syncer-the-hard-clean-way/internal/controller"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -52,7 +55,7 @@ func init() {
 
 // nolint:gocyclo
 func main() {
-	_, err := config.Load(configPath)
+	c, err := config.Load(configPath)
 	if err != nil {
 		setupLog.Error(err, "failed to load config")
 		os.Exit(1)
@@ -182,6 +185,14 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err := (&controller.NamespaceReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+		Config: c,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Namespace")
+		os.Exit(1)
+	}
 	// +kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
