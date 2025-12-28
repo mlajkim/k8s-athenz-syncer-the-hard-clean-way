@@ -22,7 +22,7 @@ func (s *Syncer) NsIntoAthenzDomain(ctx context.Context, ns string) error {
 	}
 
 	// 3. CREATE BASIC ROLE in the namespace!
-	
+
 
 	return nil
 }
