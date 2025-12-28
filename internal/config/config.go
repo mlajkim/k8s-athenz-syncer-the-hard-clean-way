@@ -7,9 +7,15 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type Hard struct {
+	AdminRoleName    string
+	ReadonlyRoleName string
+}
+
 type Config struct {
 	Athenz Athenz `yaml:"athenz"`
 	Syncer Syncer `yaml:"syncer"`
+	Hard   Hard
 }
 
 type Athenz struct {
@@ -49,6 +55,8 @@ func Load(path string) (*Config, error) {
 		return nil, err
 	}
 
+	cfg.hardCode() // For quick test & use the config as SSOT. nothing wrong.
+
 	return &cfg, nil
 }
 
@@ -71,4 +79,9 @@ func (c *Config) validate() error {
 	}
 
 	return nil
+}
+
+func (c *Config) hardCode() {
+	c.Hard.AdminRoleName = "k8s_ns_admins"
+	c.Hard.ReadonlyRoleName = "k8s_ns_viewers"
 }
