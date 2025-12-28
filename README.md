@@ -17,16 +17,15 @@ make build
 
 ## Code Structure
 
-### internal/config
-
-Application starts with `main.go`, but even `main.go` starts with config.
-
-Handles required configurations for the controller manager.
-
 ### main.go
 
 The entry point for the controller manager. It sets up the manager, registers the controllers, and starts the manager.
 May import certain independent packages.
+
+
+### internal/config
+
+Loads configuration file defined by `main.go`
 
 ### internal/controller
 
