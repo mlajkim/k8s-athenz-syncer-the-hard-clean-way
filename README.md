@@ -19,8 +19,12 @@ make build
 
 ### main.go
 
-The entry point for the controller manager. It sets up the manager, registers the controllers, and starts the manager.
-May import certain independent packages.
+The entry point for the controller manager, that does, in order: 
+
+1. Reads configuration from local file
+1. Sets up any clients (Athenz client, Kubernetes client, etc) that will be shared across controllers
+1. Registers controllers with the manager
+1. Starts the manager to begin reconciliation loops
 
 
 ### internal/config
