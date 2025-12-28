@@ -50,7 +50,7 @@ List of core syncer logics that controllers use to perform the sync between Athe
 ### pkg/athenz
 
 > [!TIP]
->`pkg` does not include any business logics.
+>`pkg` does not include any business logics, or config imports.
 
 Self-created athenz library to interact with Athenz ZMS server using ZMS APIs. I could have used the official Athenz Go client library, but I wanted to keep this project simple and focused on demonstrating the sync logic.
 
