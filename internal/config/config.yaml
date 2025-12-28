@@ -1,0 +1,9 @@
+athenz:
+  zmsUrl: "https://zms.athenz.io:4443"
+  certPath: "/certs/athenz_admin.cert.pem"
+  keyPath: "/keys/athenz_admin.private.pem"
+
+syncer:
+  syncParentDomain: "eks.users"
+  athenzRoleSyncer:
+    interval: "1m"

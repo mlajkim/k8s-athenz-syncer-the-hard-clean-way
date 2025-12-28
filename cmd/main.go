@@ -23,6 +23,7 @@ import (
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
+	"github.com/mlajkim/k8s-athenz-syncer-the-hard-clean-way/internal/config"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -38,8 +39,9 @@ import (
 )
 
 var (
-	scheme   = runtime.NewScheme()
-	setupLog = ctrl.Log.WithName("setup")
+	scheme     = runtime.NewScheme()
+	setupLog   = ctrl.Log.WithName("setup")
+	configPath = "./internal/config/config.yaml"
 )
 
 func init() {
@@ -50,6 +52,12 @@ func init() {
 
 // nolint:gocyclo
 func main() {
+	_, err := config.Load(configPath)
+	if err != nil {
+		setupLog.Error(err, "failed to load config")
+		os.Exit(1)
+	}
+
 	var metricsAddr string
 	var metricsCertPath, metricsCertName, metricsCertKey string
 	var webhookCertPath, webhookCertName, webhookCertKey string
