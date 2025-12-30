@@ -5,7 +5,12 @@ import (
 	"fmt"
 )
 
-// TODO: Use Solution Template in the future, if possible.
+// NsIntoAthenzDomain's role is to create:
+// - Athenz Domain
+// - Necessary roles under the domain above
+// for given Kubernetes namespace.
+// The Parent domain will be decided by the configuration given as "yaml:syncer.parentDomain
+// TODO: Use Solution Template in the future, if possible for quicker/efficient way of adding
 func (s *Syncer) NsIntoAthenzDomain(ctx context.Context, ns string) error {
 	// 1. CREATE SUB DOMAIN:
 	newDomain := fmt.Sprintf("%s.%s", s.c.Syncer.ParentDomain, ns)
@@ -13,16 +18,12 @@ func (s *Syncer) NsIntoAthenzDomain(ctx context.Context, ns string) error {
 		return fmt.Errorf("create subdomain failed: %w", err)
 	}
 
-	// 2. CREATE NECESSARY ROLES:
-	defaultRoles := []string{s.c.Hard.AdminRoleName, s.c.Hard.ReadonlyRoleName}
-	for _, role := range defaultRoles {
-		if err := s.athenzClient.PostRole(newDomain, role); err != nil {
-			return fmt.Errorf("create role %s failed: %w", role, err)
+	// 2. CREATE NECESSARY ROLES
+	for _, role := range s.c.Syncer.Roles {
+		if err := s.athenzClient.PostRole(newDomain, role.Name); err != nil {
+			return fmt.Errorf("create role %s failed: %w", role.Name, err)
 		}
 	}
-
-	// 3. CREATE BASIC ROLE in the namespace!
-
 
 	return nil
 }
