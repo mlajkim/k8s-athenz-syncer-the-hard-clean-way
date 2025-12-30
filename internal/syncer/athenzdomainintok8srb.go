@@ -2,8 +2,10 @@ package syncer
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 
+	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -18,6 +20,18 @@ func (s *Syncer) AthenzDomainIntoK8sRb(ctx context.Context) error {
 		return err
 	}
 
+	// Get current namespaces
+	nsList := &corev1.NamespaceList{}
+	if err := s.k.List(ctx, nsList); err != nil {
+		return fmt.Errorf("failed to list namespaces: %w", err)
+	}
+
+	// Build a map of existing namespaces for quick lookup:
+	existingNamespaces := make(map[string]bool)
+	for _, ns := range nsList.Items {
+		existingNamespaces[ns.Name] = true
+	}
+
 	for _, subDomain := range subDomains {
 		ns := s.athenzClient.GetLeaf(subDomain)
 		// !WARNING!
@@ -28,6 +42,12 @@ func (s *Syncer) AthenzDomainIntoK8sRb(ctx context.Context) error {
 		// ! AND users inside Athenz roles would get permissions in "kube-system" namespace,
 		// ! which is definitely NOT what we want, so we make sure to skip them with "continue":
 		if _, excludedNs := s.c.Syncer.ExcludedNamespaces[ns]; excludedNs {
+			continue
+		}
+
+		// if no such ns found, simply skip it. The job of this syncer is NOT to create namespaces,
+		// and expect other controllers to create namespaces as needed:
+		if !existingNamespaces[ns] {
 			continue
 		}
 

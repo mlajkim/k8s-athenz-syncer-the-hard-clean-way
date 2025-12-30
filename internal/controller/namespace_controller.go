@@ -52,8 +52,19 @@ type NamespaceReconciler struct {
 func (r *NamespaceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := logf.FromContext(ctx)
 
+	ns := corev1.Namespace{}
+	if err := r.Get(ctx, req.NamespacedName, &ns); err != nil {
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
 	if _, exists := r.Cfg.Syncer.ExcludedNamespaces[req.Name]; exists {
 		log.V(1).Info("Namespace is excluded from syncer, skipping", "excludedNamespace", req.Name)
+		return ctrl.Result{}, nil
+	}
+
+	if !ns.DeletionTimestamp.IsZero() {
+		// Just simple log is fine for now:
+		log.V(1).Info("Namespace is being deleted, skipping", "namespace", ns.Name)
 		return ctrl.Result{}, nil
 	}
 
@@ -76,5 +87,13 @@ func (r *NamespaceReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&corev1.Namespace{}).
 		Named("namespace").
+
+		// If you want some control of concurrency:
+		// WithEventFilter(predicate.Funcs{
+		// 	CreateFunc:  func(e event.CreateEvent) bool { return true },
+		// 	DeleteFunc:  func(e event.DeleteEvent) bool { return false }, // Ignore deletions
+		// 	UpdateFunc:  func(e event.UpdateEvent) bool { return false }, // Ignore updates
+		// 	GenericFunc: func(e event.GenericEvent) bool { return false },
+		// }).
 		Complete(r)
 }
