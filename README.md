@@ -78,7 +78,6 @@ cp ./athenz_distribution/keys/athenz_admin.private.pem ./k8s_athenz_syncer_the_h
 
 Run the following command, and simply hit `Enter` keys with default values:
 
-
 ```sh
 make -C ./k8s_athenz_syncer_the_hard_clean_way run
 ```
