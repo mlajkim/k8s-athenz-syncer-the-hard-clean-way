@@ -25,13 +25,16 @@ func (s *Syncer) NsIntoK8sRole(ctx context.Context, ns string) error {
 			})
 		}
 
-		wantRole := &rbacv1.Role{ObjectMeta: metav1.ObjectMeta{Name: s.buildRoleName(ns, wantRole.Suffix), Namespace: ns}}
+		wantRole := &rbacv1.Role{ObjectMeta: metav1.ObjectMeta{Name: s.buildRoleName(ns, wantRole.Suffix), Namespace: ns}, Rules: rules}
 		gotRole := &rbacv1.Role{}
 
 		err := s.k.Get(ctx, client.ObjectKeyFromObject(wantRole), gotRole)
 		if err != nil {
 			if errors.IsNotFound(err) {
-				return s.k.Create(ctx, wantRole)
+				if err := s.k.Create(ctx, wantRole); err != nil {
+					return err
+				}
+				continue // must continue so that other roles are created!
 			}
 			return err // any failures other than NotFound
 		}

@@ -14,6 +14,9 @@ syncer:
   - "athenz-system"
   - "cert-manager"
   - "local-path-storage"
+  # customs:
+  - "kube-node-lease"
+  - "athenz"
   # just in case:
   - "administrator"
   - "monitoring"
