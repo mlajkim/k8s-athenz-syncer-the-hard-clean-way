@@ -9,6 +9,13 @@
   - [How to run locally](#how-to-run-locally)
     - [For those who want to run easy way](#for-those-who-want-to-run-easy-way)
     - [Run locally](#run-locally)
+  - [Limitations](#limitations)
+    - [No Delta Sync (Full Polling Only)](#no-delta-sync-full-polling-only)
+    - [No Concurrency Control](#no-concurrency-control)
+    - [Limited Error Handling & Backoff](#limited-error-handling--backoff)
+    - [No Custom Metrics](#no-custom-metrics)
+    - [No unit test](#no-unit-test)
+    - [Athenz Domain/Role Cleanup](#athenz-domainrole-cleanup)
 
 <!-- /TOC -->
 
@@ -94,6 +101,39 @@ git clone https://github.com/mlajkim/k8s-athenz-syncer-the-hard-clean-way.git k8
 make run
 ```
 
+## Limitations
+
+This project is not production-ready, but it is more of the educational purpose to show how `k8s-athenz-syncer` works under the hood.
+
+### No Delta Sync (Full Polling Only)
+
+The current implementation fetches the full membership list from the Athenz ZMS API on every reconciliation loop. It does not utilize:
+
+- caching
+- Last-Modified headers
+-  ETags
+
+to fetch only the changes (delta), which would be inefficient at scale.
+
+### No Concurrency Control
+
+The controller processes items sequentially. In a production environment with thousands of namespaces, parallel processing (worker pools) would be necessary to reduce sync latency.
+
+### Limited Error Handling & Backoff
+
+While it relies on the default rate-limiting of controller-runtime, it lacks sophisticated error handling strategies like circuit breakers for the external ZMS API or differentiating between transient network errors and permanent configuration errors.
+
+### No Custom Metrics
+
+It does not export custom Prometheus metrics (e.g., athenz_sync_duration_seconds, athenz_api_errors_total), which are critical for monitoring the health and performance of the operator in production.
+
+### No unit test
+
+Only simple and manual testing is done so far. There is no unit test coverage for the reconciliation logic, Athenz API interactions, or RBAC role management.
+
+### Athenz Domain/Role Cleanup
+
+When a Kubernetes namespace is deleted, the corresponding Athenz domain and roles are not automatically cleaned up. In real world scenarios, maybe there could be business decision not to do so, but still it does not offer a feature to turn in on/off. In a certain production scenario, you would want to implement finalizers to ensure proper cleanup of Athenz resources when namespaces are removed.
 
 <!-- Footnote -->
 
