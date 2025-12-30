@@ -12,12 +12,6 @@ The goal of this doc is to store what I have done to set up the development envi
 kubebuilder create api --group core --version v1 --kind Namespace --controller=true --resource=false
 ```
 
-## Create athenz-domain controller
-
-```sh
-kubebuilder create api --group athenz --version v1 --kind AthenzDomain --controller=true --resource=false
-```
-
 ## Create athenz-domain poller
 
 We want the operator to poll Athenz for changes to the domain, so we create a poller over time.
