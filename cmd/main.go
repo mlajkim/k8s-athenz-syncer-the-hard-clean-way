@@ -47,7 +47,7 @@ import (
 var (
 	scheme     = runtime.NewScheme()
 	setupLog   = ctrl.Log.WithName("setup")
-	configPath = "./internal/config/config.yaml"
+	configPath = "./config.yaml"
 )
 
 func init() {

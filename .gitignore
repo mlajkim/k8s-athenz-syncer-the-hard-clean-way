@@ -26,5 +26,12 @@ go.work
 *.swo
 *~
 
+# ignore certs and key dir:
+certs/
+keys/
+
+# ignore default config file in root:
+config.yaml
+
 # Kubeconfig might contain secrets
 *.kubeconfig
