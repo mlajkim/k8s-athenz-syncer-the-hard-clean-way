@@ -1,6 +1,6 @@
 # k8s-athenz-syncer-the-hard-clean-way
 
-`k8s-athenz-syncer-the-hard-clean-way` [^1] is a Kubernetes controller that syncs Athenz roles and policies with Kubernetes RBAC, just like [Athenz/k8s-athenz-syncer](https://github.com/AthenZ/k8s-athenz-syncer), but in a more manual and educational way.
+`k8s-athenz-syncer-the-hard-clean-way` [^1] is a Kubernetes controller that syncs Athenz roles into Kubernetes RBAC, just like [Athenz/k8s-athenz-syncer](https://github.com/AthenZ/k8s-athenz-syncer), but in a more manual and educational way.
 
 ## Philosophy
 
@@ -19,7 +19,7 @@ make build
 
 ### main.go
 
-The entry point for the controller manager, that does, in order: 
+The entry point for the controller manager, that does, in order:
 
 1. Reads configuration from local file
 1. Sets up any clients (Athenz client, Kubernetes client, etc) that will be shared across controllers
