@@ -73,12 +73,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	syncerClient := syncer.New(athenzClient, cfg)
-	if err != nil {
-		setupLog.Error(err, "failed to create athenz client")
-		os.Exit(1)
-	}
-
 	var metricsAddr string
 	var metricsCertPath, metricsCertName, metricsCertKey string
 	var webhookCertPath, webhookCertName, webhookCertKey string
@@ -203,8 +197,16 @@ func main() {
 		os.Exit(1)
 	}
 
+	k := mgr.GetClient() // kubernetes client from the manager
+
+	syncerClient := syncer.New(cfg, k, athenzClient)
+	if err != nil {
+		setupLog.Error(err, "failed to create athenz client")
+		os.Exit(1)
+	}
+
 	if err := (&controller.NamespaceReconciler{
-		Client:       mgr.GetClient(),
+		Client:       k,
 		Scheme:       mgr.GetScheme(),
 		Cfg:          cfg,
 		SyncerClient: syncerClient,

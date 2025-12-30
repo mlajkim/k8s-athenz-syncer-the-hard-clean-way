@@ -7,13 +7,25 @@ syncer:
   parentDomain: "eks.users"
   athenzRoleMembers:
     interval: "1m"
+  excludedNamespaces:
+  - "kube-system"
+  - "kube-public"
+  - "default"
+  - "athenz-system"
+  - "cert-manager"
+  - "local-path-storage"
+  # just in case:
+  - "administrator"
+  - "monitoring"
+  - "logging"
+  - "admin"
   roles:
-  - name: "k8s_ns_admins"
+  - suffix: "k8s_ns_admins"
     rules:
     - apiGroups: [ "*" ]
       resources: [ "*" ]
       verbs: [ "*" ]
-  - name: "k8s_ns_viewers"
+  - suffix: "k8s_ns_viewers"
     rules:
     - apiGroups: [ "" ]
       resources: [ "pods", "services", "configmaps" ]

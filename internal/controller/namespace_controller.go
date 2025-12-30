@@ -50,12 +50,23 @@ type NamespaceReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.22.4/pkg/reconcile
 func (r *NamespaceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = logf.FromContext(ctx)
+	log := logf.FromContext(ctx)
 
-	err := r.SyncerClient.NsIntoAthenzDomain(ctx, req.Name)
-	if err != nil {
+	if _, exists := r.Cfg.Syncer.ExcludedNamespacesMap[req.Name]; exists {
+		log.V(1).Info("Namespace is excluded from syncer, skipping", "excludedNamespace", req.Name)
+		return ctrl.Result{}, nil
+	}
+
+	if err := r.SyncerClient.NsIntoAthenzDomain(ctx, req.Name); err != nil {
 		return ctrl.Result{}, err
 	}
+
+	if err := r.SyncerClient.NsIntoK8sRole(ctx, req.Name); err != nil {
+		return ctrl.Result{}, err
+	}
+
+	// Log success:
+	log.Info("Successfully reconciled", "namespace", req.Name)
 
 	return ctrl.Result{}, nil
 }

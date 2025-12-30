@@ -3,17 +3,31 @@ package syncer
 import (
 	"github.com/mlajkim/k8s-athenz-syncer-the-hard-clean-way/internal/config"
 	"github.com/mlajkim/k8s-athenz-syncer-the-hard-clean-way/pkg/athenz"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// Syncer: Athenz와 K8s 사이의 로직을 담당
 type Syncer struct {
-	athenzClient *athenz.AthenzClient
 	c            *config.Config
+	k            client.Client
+	athenzClient *athenz.AthenzClient
 }
 
-func New(client *athenz.AthenzClient, cfg *config.Config) *Syncer {
+func New(cfg *config.Config, k client.Client, athenzClient *athenz.AthenzClient) *Syncer {
 	return &Syncer{
-		athenzClient: client,
 		c:            cfg,
+		k:            k,
+		athenzClient: athenzClient,
 	}
+}
+
+// i.e) if roleName is "dev-role" and parent domain is "example.domain",
+// the returned value is "example.domain:role.dev-role"
+func (s *Syncer) buildRoleName(ns, roleName string) string {
+	return s.c.Syncer.ParentDomain + "." + ns + ":role." + roleName
+}
+
+// i.e) if roleName is "dev-role" and parent domain is "example.domain",
+// the returned value is "example.domain:role.dev-role:members"
+func (s *Syncer) buildRoleBindingName(ns, roleName string) string {
+	return s.buildRoleName(ns, roleName) + ":members"
 }
