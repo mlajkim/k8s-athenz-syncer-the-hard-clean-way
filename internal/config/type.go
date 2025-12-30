@@ -16,6 +16,7 @@ type Athenz struct {
 type Syncer struct {
 	// Shared:
 	ParentDomain string       `yaml:"parentDomain"`
+	UserTld      string       `yaml:"userTld"`
 	Roles        []RoleConfig `yaml:"roles"`
 
 	// Specific:
@@ -26,8 +27,8 @@ type Syncer struct {
 }
 
 type RoleConfig struct {
-	Suffix string       `yaml:"suffix"` // Role name is built based on given customizable suffix
-	Rules  []PolicyRule `yaml:"rules"`
+	AthenzRole string       `yaml:"athenzRole"`
+	Rules      []PolicyRule `yaml:"rules"`
 }
 
 type PolicyRule struct {

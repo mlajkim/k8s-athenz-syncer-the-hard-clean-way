@@ -13,6 +13,7 @@ type Args struct {
 	ZmsURL   string // Base URL of the Athenz ZMS server i.e) https://athenz-zms-server:4443/zms/v1
 	CertPath string // Path to client certificate file to claim identity i.e) /var/run/athenz/service.crt
 	KeyPath  string // Path to client private key file i.e) /var/run/athenz/service.key
+	UserTld  string // TopLevelDomain for user members, if TLD is "user.", then give "user" only
 }
 
 type AthenzClient struct {

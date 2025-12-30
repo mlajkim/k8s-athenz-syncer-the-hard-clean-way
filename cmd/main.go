@@ -68,6 +68,7 @@ func main() {
 		ZmsURL:   cfg.Athenz.ZmsURL,
 		CertPath: cfg.Athenz.CertPath,
 		KeyPath:  cfg.Athenz.KeyPath,
+		UserTld:  cfg.Syncer.UserTld,
 	})
 	if err != nil {
 		setupLog.Error(err, "failed to create athenz client")
