@@ -74,7 +74,12 @@ git clone https://github.com/mlajkim/k8s-athenz-syncer-the-hard-clean-way.git k8
 
 cp ./athenz_distribution/certs/athenz_admin.cert.pem ./k8s_athenz_syncer_the_hard_clean_way/certs/athenz_admin.cert.pem
 cp ./athenz_distribution/keys/athenz_admin.private.pem ./k8s_athenz_syncer_the_hard_clean_way/keys/athenz_admin.private.pem
+```
 
+Run the following command, and simply hit `Enter` keys with default values:
+
+
+```sh
 make -C ./k8s_athenz_syncer_the_hard_clean_way run
 ```
 
