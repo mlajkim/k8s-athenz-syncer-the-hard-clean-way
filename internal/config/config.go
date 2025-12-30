@@ -36,7 +36,7 @@ func Load(path string) (*Config, error) {
 }
 
 func (c *Config) buildDerivedState(value *yaml.Node) error {
-	c.Syncer.ExcludedNamespacesMap = util.StrArrayIntoUniqSet(c.Syncer.ExcludedNamespaces)
+	c.Syncer.ExcludedNamespaces = util.StrArrayIntoUniqSet(c.Syncer.ExcludedNamespacesRaw)
 
 	return nil
 }
@@ -54,14 +54,6 @@ func (c *Config) validate() error {
 
 	if c.Syncer.ParentDomain == "" {
 		return fmt.Errorf("syncer.syncParentDomain is missing")
-	}
-	if c.Syncer.ARoleMembers.Interval == "" {
-		return fmt.Errorf("syncer.athenzRoleMembers.interval is missing")
-	}
-
-	// TODO: Temporary testing:
-	if c.Syncer.ExcludedNamespaces == nil || len(c.Syncer.ExcludedNamespaces) == 0 {
-		return fmt.Errorf("syncer.excludedNamespaces is missing")
 	}
 
 	return nil

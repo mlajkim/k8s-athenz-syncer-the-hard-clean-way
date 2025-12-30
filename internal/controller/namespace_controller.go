@@ -52,7 +52,7 @@ type NamespaceReconciler struct {
 func (r *NamespaceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := logf.FromContext(ctx)
 
-	if _, exists := r.Cfg.Syncer.ExcludedNamespacesMap[req.Name]; exists {
+	if _, exists := r.Cfg.Syncer.ExcludedNamespaces[req.Name]; exists {
 		log.V(1).Info("Namespace is excluded from syncer, skipping", "excludedNamespace", req.Name)
 		return ctrl.Result{}, nil
 	}

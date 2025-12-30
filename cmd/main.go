@@ -26,8 +26,11 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"github.com/mlajkim/k8s-athenz-syncer-the-hard-clean-way/internal/config"
+	"github.com/mlajkim/k8s-athenz-syncer-the-hard-clean-way/internal/poller"
 	"github.com/mlajkim/k8s-athenz-syncer-the-hard-clean-way/internal/syncer"
 	"github.com/mlajkim/k8s-athenz-syncer-the-hard-clean-way/pkg/athenz"
+
+	"github.com/mlajkim/k8s-athenz-syncer-the-hard-clean-way/internal/controller"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -38,8 +41,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/metrics/filters"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
-
-	"github.com/mlajkim/k8s-athenz-syncer-the-hard-clean-way/internal/controller"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -215,6 +216,13 @@ func main() {
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder
+
+	// add poller:
+	rolePoller := poller.New(syncerClient, cfg.Syncer.ARoleMembers.Interval)
+	if err := mgr.Add(rolePoller); err != nil {
+		setupLog.Error(err, "unable to add role poller to manager")
+		os.Exit(1)
+	}
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
 		setupLog.Error(err, "unable to set up health check")

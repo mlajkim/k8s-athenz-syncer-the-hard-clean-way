@@ -1,5 +1,7 @@
 package config
 
+import "time"
+
 type Config struct {
 	Athenz Athenz `yaml:"athenz"`
 	Syncer Syncer `yaml:"syncer"`
@@ -17,8 +19,8 @@ type Syncer struct {
 	Roles        []RoleConfig `yaml:"roles"`
 
 	// Specific:
-	ExcludedNamespaces    []string            `yaml:"excludedNamespaces"` // Raw
-	ExcludedNamespacesMap map[string]struct{} `yaml:"-"`                  // Processed
+	ExcludedNamespacesRaw []string            `yaml:"excludedNamespaces"` // Raw
+	ExcludedNamespaces    map[string]struct{} `yaml:"-"`                  // Processed
 	ARoleMembers          ARoleMembers        `yaml:"athenzRoleMembers"`
 	Namespace             Namespaces          `yaml:"namespace"`
 }
@@ -35,7 +37,7 @@ type PolicyRule struct {
 }
 
 type ARoleMembers struct {
-	Interval string `yaml:"interval"`
+	Interval time.Duration `yaml:"interval"`
 }
 
 type Namespaces struct {
