@@ -25,6 +25,13 @@ import (
 	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
+	"github.com/mlajkim/k8s-athenz-syncer-the-hard-clean-way/internal/config"
+	"github.com/mlajkim/k8s-athenz-syncer-the-hard-clean-way/internal/poller"
+	"github.com/mlajkim/k8s-athenz-syncer-the-hard-clean-way/internal/syncer"
+	"github.com/mlajkim/k8s-athenz-syncer-the-hard-clean-way/pkg/athenz"
+
+	"github.com/mlajkim/k8s-athenz-syncer-the-hard-clean-way/internal/controller"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -38,8 +45,9 @@ import (
 )
 
 var (
-	scheme   = runtime.NewScheme()
-	setupLog = ctrl.Log.WithName("setup")
+	scheme     = runtime.NewScheme()
+	setupLog   = ctrl.Log.WithName("setup")
+	configPath = "./config.yaml"
 )
 
 func init() {
@@ -50,6 +58,23 @@ func init() {
 
 // nolint:gocyclo
 func main() {
+	cfg, err := config.Load(configPath)
+	if err != nil {
+		setupLog.Error(err, "failed to load config")
+		os.Exit(1)
+	}
+
+	athenzClient, err := athenz.New(athenz.Args{
+		ZmsURL:   cfg.Athenz.ZmsURL,
+		CertPath: cfg.Athenz.CertPath,
+		KeyPath:  cfg.Athenz.KeyPath,
+		UserTld:  cfg.Syncer.UserTld,
+	})
+	if err != nil {
+		setupLog.Error(err, "failed to create athenz client")
+		os.Exit(1)
+	}
+
 	var metricsAddr string
 	var metricsCertPath, metricsCertName, metricsCertKey string
 	var webhookCertPath, webhookCertName, webhookCertKey string
@@ -174,7 +199,31 @@ func main() {
 		os.Exit(1)
 	}
 
+	k := mgr.GetClient() // kubernetes client from the manager
+
+	syncerClient := syncer.New(cfg, k, athenzClient)
+	if err != nil {
+		setupLog.Error(err, "failed to create athenz client")
+		os.Exit(1)
+	}
+
+	if err := (&controller.NamespaceReconciler{
+		Client:       k,
+		Scheme:       mgr.GetScheme(),
+		Cfg:          cfg,
+		SyncerClient: syncerClient,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Namespace")
+		os.Exit(1)
+	}
 	// +kubebuilder:scaffold:builder
+
+	// add poller:
+	rolePoller := poller.New(syncerClient, cfg.Syncer.ARoleMembers.Interval)
+	if err := mgr.Add(rolePoller); err != nil {
+		setupLog.Error(err, "unable to add role poller to manager")
+		os.Exit(1)
+	}
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
 		setupLog.Error(err, "unable to set up health check")

@@ -1,62 +1,98 @@
 # k8s-athenz-syncer-the-hard-clean-way
 
-`k8s-athenz-syncer-the-hard-clean-way` [^1] is a Kubernetes controller that syncs Athenz roles and policies with Kubernetes RBAC, just like [Athenz/k8s-athenz-syncer](https://github.com/AthenZ/k8s-athenz-syncer), but in a more manual and educational way.
+`k8s-athenz-syncer-the-hard-clean-way` [^1] is a Kubernetes controller that syncs Athenz roles into Kubernetes RBAC, just like [Athenz/k8s-athenz-syncer](https://github.com/AthenZ/k8s-athenz-syncer), but in a more manual and educational way.
 
-## Philosophy
+<!-- TOC -->
 
-This project tries to demonstrate the sync between Athenz Role and Kubernetes RBAC only using `ZMS API calls`. This project is also designed not to care about the performance or scalability. The main goal is to help users understand how the sync works under the hood.
+- [k8s-athenz-syncer-the-hard-clean-way](#k8s-athenz-syncer-the-hard-clean-way)
+  - [Features](#features)
+  - [How to run locally](#how-to-run-locally)
+    - [For those who want to run easy way](#for-those-who-want-to-run-easy-way)
+    - [Run locally](#run-locally)
 
+<!-- /TOC -->
 
-## Build Locally
+## Features
 
-To build the manager binary locally you can run:
+Operator `k8s-athenz-syncer-the-hard-clean-way` creates the following when you simply create a namespace in your Kubernetes cluster:
+- Athenz domain under certain parent domain (e.g., `eks.users`)
+- Athenz roles under the created domain, that you can define in the config file
+- Kubernetes RBAC Roles that correspond to the created Athenz roles, that you define in the config file
 
-```sh
-make build
-```
+![Demo](./assets/01_create_ns.gif)
 
-## Code Structure
+Operator `k8s-athenz-syncer-the-hard-clean-way` periodically polls Athenz roles under certain parent domain (e.g., `eks.users`), and syncs the members of the Athenz roles into corresponding Kubernetes RBAC Roles.
 
-### main.go
+![Demo](./assets/02_polling_athenz_roles.gif)
 
-The entry point for the controller manager. It sets up the manager, registers the controllers, and starts the manager.
+Operator `k8s-athenz-syncer-the-hard-clean-way` makes sure that if you delete members from Athenz roles, the members are also removed from corresponding Kubernetes RBAC Roles.
 
-### internal/config
+![Demo](./assets/03_remove_athenz_role_members.gif)
 
-Handles required configurations for the controller manager.
+## How to run locally
 
+This operator requires the following:
 
-### internal/controller
-
-List of controllers that this operator `k8s-athenz-syncer-the-hard-clean-way` can do.
-
-Controllers's code should be neat so that it is easier to grab the flow of reconciliation logic.
-
-Core jobs:
-
-- `NamespaceController`: Use namespaces as SSOT, and syncs:
-  - Athenz Sub Domains, if not exist
-  - Athenz Default Roles, if not exist
-  - Kubernetes necessary RBAC Roles, if not exist
-- `AthenzRoleController`: Every minute, check all athenz roles under certain Parent domain, and syncs:
-  - Kubernetes RBAC Roles, if not synced
+- Running kubernetes cluster
+- Running Athenz Server
 
 
-### internal/syncer
-
-List of core syncer logics that controllers use to perform the sync between Athenz and Kubernetes.
-
-
-### pkg/athenz
+### For those who want to run easy way
 
 > [!TIP]
->`pkg` does not include any business logics.
+> If you know what you are doing, you can always skip this section go build your own way here: [Run locally](#run-locally)
 
-Self-created athenz library to interact with Athenz ZMS server using ZMS APIs. I could have used the official Athenz Go client library, but I wanted to keep this project simple and focused on demonstrating the sync logic.
 
-### pkg/athenzutil
+The following command sets up:
 
-Even lower level utility functions to support `pkg/athenz`.
+- A simple test directory for clean start
+- A local Kubernetes cluster using [kind](https://kind.sigs.k8s.io/)
+- Athenz server deployed into the local Kubernetes cluster using [Athenz Distribution](https://github.com/ctyano/athenz-distribution)
+- Clones this project into the test directory & copy necessary certs and keys for Athenz admin user
+
+```sh
+brew install kind && kind create cluster
+
+_tmp_dir=$(date +%y%m%d_%H%M%S_k8s_athenz_syncer_the_hard_clean_way)
+mkdir -p ~/test_dive/$_tmp_dir && cd ~/test_dive/$_tmp_dir
+
+git clone https://github.com/ctyano/athenz-distribution.git athenz_distribution
+make -C ./athenz_distribution clean-kubernetes-athenz deploy-kubernetes-athenz
+```
+
+Once the manifests above is done, set up ZMS server:
+
+```sh
+kubectl -n athenz port-forward deployment/athenz-ui 4443:4443 &
+kubectl -n athenz port-forward deployment/athenz-ui 3000:3000 &
+```
+
+Clone this project, with copying necessary certs and keys for Athenz admin user:
+
+```sh
+git clone https://github.com/mlajkim/k8s-athenz-syncer-the-hard-clean-way.git k8s_athenz_syncer_the_hard_clean_way
+
+cp ./athenz_distribution/certs/athenz_admin.cert.pem ./k8s_athenz_syncer_the_hard_clean_way/certs/athenz_admin.cert.pem
+cp ./athenz_distribution/keys/athenz_admin.private.pem ./k8s_athenz_syncer_the_hard_clean_way/keys/athenz_admin.private.pem
+```
+
+Run the following command, and simply hit `Enter` keys with default values:
+
+```sh
+make -C ./k8s_athenz_syncer_the_hard_clean_way run
+```
+
+### Run locally
+
+> [!TIP]
+> If you want to see running without thinking too much, check out: [For those who want to run easy way](#for-those-who-want-to-run-easy-way)
+
+To run this operator locally, do the following:
+
+```sh
+git clone https://github.com/mlajkim/k8s-athenz-syncer-the-hard-clean-way.git k8s_athenz_syncer && cd k8s_athenz_syncer
+make run
+```
 
 
 <!-- Footnote -->
