@@ -2,69 +2,62 @@
 
 `k8s-athenz-syncer-the-hard-clean-way` [^1] is a Kubernetes controller that syncs Athenz roles into Kubernetes RBAC, just like [Athenz/k8s-athenz-syncer](https://github.com/AthenZ/k8s-athenz-syncer), but in a more manual and educational way.
 
-## Philosophy
+## Features
 
-This project tries to demonstrate the sync between Athenz Role and Kubernetes RBAC only using `ZMS API calls`. This project is also designed not to care about the performance or scalability. The main goal is to help users understand how the sync works under the hood.
+Operator `k8s-athenz-syncer-the-hard-clean-way` creates the following when you simply create a namespace in your Kubernetes cluster:
+- Athenz domain under certain parent domain (e.g., `eks.users`)
+- Athenz roles under the created domain, that you can define in the config file
+- Kubernetes RBAC Roles that correspond to the created Athenz roles, that you define in the config file
 
+![Demo](./assets/01_create_ns.gif)
 
-## Build Locally
+Operator `k8s-athenz-syncer-the-hard-clean-way` periodically polls Athenz roles under certain parent domain (e.g., `eks.users`), and syncs the members of the Athenz roles into corresponding Kubernetes RBAC Roles.
 
-To build the manager binary locally you can run:
+![Demo](./assets/02_polling_athenz_roles.gif)
 
+Operator `k8s-athenz-syncer-the-hard-clean-way` makes sure that if you delete members from Athenz roles, the members are also removed from corresponding Kubernetes RBAC Roles.
+
+![Demo](./assets/03_remove_athenz_role_members.gif)
+
+## To build for the first time
+
+This operator requires the following:
+
+- Running kubernetes cluster
+- Running Athenz Sever
+
+### How to build "Running kubernetes cluster"
+
+Simply do the following:
+
+```sh
+brew install kind && kind create cluster
+```
+
+### How to build "Running Athenz Sever"
+
+[ctyano's athenz-distribution](https://github.com/ctyano/athenz-distribution) is the easiest way to run Athenz server locally.
+
+```sh
+git clone https://github.com/ctyano/athenz-distribution.git athenz_dist
+cd athenz_dist
+make clean-kubernetes-athenz deploy-kubernetes-athenz
+kubectl -n athenz port-forward deployment/athenz-ui 4443:4443
+kubectl -n athenz port-forward deployment/athenz-ui 3000:3000
+```
+
+## To build locally
+
+If you want to see in action, you can build the operator binary locally by running. However, please note that this project depends on the following, which I share it :
+
+- Running kubernetes cluster
+- Running Athenz Sever
+
+To build this project locally, do the following:
 ```sh
 make build
 ```
 
-## Code Structure
-
-### main.go
-
-The entry point for the controller manager, that does, in order:
-
-1. Reads configuration from local file
-1. Sets up any clients (Athenz client, Kubernetes client, etc) that will be shared across controllers
-1. Registers controllers with the manager
-1. Starts the manager to begin reconciliation loops
-
-
-### internal/config
-
-Loads configuration file defined by `main.go`
-
-### internal/controller & internal/poller
-
-List of controllers that this operator `k8s-athenz-syncer-the-hard-clean-way` can do.
-
-Controllers's code should be neat so that it is easier to grab the flow of reconciliation logic.
-
-Core jobs:
-
-- `NamespaceController`: Use namespaces as SSOT, and syncs:
-  - Athenz Sub Domains, if not exist
-  - Athenz Default Roles, if not exist
-  - Kubernetes necessary RBAC Roles, if not exist
-- `AthenzDomainPoller`: Every minute, check all athenz roles under certain Parent domain, and syncs:
-  - Kubernetes RBAC Roles, if not synced
-
-
-### internal/syncer
-
-> [!NOTE]
-> Please name your code with the SSOT file data type, so if operator syncs with Namespace, name it `namespace.go`, if it syncs with Athenz Role, name it `athenzrole.go`, etc.
-
-List of core syncer logics that controllers use to perform the sync between Athenz and Kubernetes.
-
-
-### pkg/athenz
-
-> [!TIP]
->`pkg` does not include any business logics, or config imports.
-
-Self-created athenz library to interact with Athenz ZMS server using ZMS APIs. I could have used the official Athenz Go client library, but I wanted to keep this project simple and focused on demonstrating the sync logic.
-
-### pkg/athenzutil
-
-Even lower level utility functions to support `pkg/athenz`.
 
 
 <!-- Footnote -->
