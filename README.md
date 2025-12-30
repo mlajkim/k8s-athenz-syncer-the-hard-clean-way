@@ -31,7 +31,7 @@ The entry point for the controller manager, that does, in order:
 
 Loads configuration file defined by `main.go`
 
-### internal/controller
+### internal/controller & internal/poller
 
 List of controllers that this operator `k8s-athenz-syncer-the-hard-clean-way` can do.
 
@@ -43,7 +43,7 @@ Core jobs:
   - Athenz Sub Domains, if not exist
   - Athenz Default Roles, if not exist
   - Kubernetes necessary RBAC Roles, if not exist
-- `AthenzRoleController`: Every minute, check all athenz roles under certain Parent domain, and syncs:
+- `AthenzDomainPoller`: Every minute, check all athenz roles under certain Parent domain, and syncs:
   - Kubernetes RBAC Roles, if not synced
 
 
